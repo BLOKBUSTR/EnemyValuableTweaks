@@ -23,7 +23,7 @@ This mod is extensively configurable, so you can fine-tune the orb's behavior to
 - Automatic config syncing
 - Ability to adjust explosion probability for each moon phase?
 
-Suggestions are welcome! Tell me what's on your mind in the [Discord Thread](https://discord.com/channels/1344557689979670578/1344699091959156787) (pending).
+Suggestions are welcome! Tell me what's on your mind in the [Discord Thread](https://discord.com/channels/1344557689979670578/1421636750174060635).
 
 ## 🔧 Configuration
 
@@ -53,4 +53,4 @@ This mod may potentially conflict with other mods that extensively patch the `St
 ## ❤️ Acknowledgements
 - Huge thanks to OrigamiCoder and Omniscye in the R.E.P.O. Modding Server for helping me get started with modding, and for guiding me through the making of this mod!
 
-Please report any issues on [GitHub](https://github.com/BLOKBUSTR/EnemyValuableTweaks) or the [Discord Thread](https://discord.com/channels/1344557689979670578/1344699091959156787) (pending).
+Please report any issues on [GitHub](https://github.com/BLOKBUSTR/EnemyValuableTweaks) or the [Discord Thread](https://discord.com/channels/1344557689979670578/1421636750174060635).
