@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace EnemyValuableTweaks
 {
-    [BepInPlugin("BLOKBUSTR.EnemyValuableTweaks", "EnemyValuableTweaks", "1.0.0")]
+    [BepInPlugin("BLOKBUSTR.EnemyValuableTweaks", "EnemyValuableTweaks", "1.0.1")]
     public class EnemyValuableTweaks : BaseUnityPlugin
     {
         internal static EnemyValuableTweaks Instance { get; private set; } = null!;
