@@ -15,7 +15,7 @@ namespace EnemyValuableTweaks
         internal Harmony? Harmony { get; set; }
 
         #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-        public static ConfigEntry<string> configREADME;
+        public static ConfigEntry<string> configReadme;
 
         public static ConfigEntry<bool> configEnableTimer;
         public static ConfigEntry<float> configTimerLength;
@@ -37,7 +37,7 @@ namespace EnemyValuableTweaks
         private void Awake()
         {
             // Config setup
-            configREADME = Config.Bind("0 - README", "README", "Note that each category takes priority over the previous. Configs update immediately, especially while in-game if using RepoConfig.",
+            configReadme = Config.Bind("0 - README", "README", "Note that each category takes priority over the previous. Configs update immediately, especially while in-game if using RepoConfig.",
                 new ConfigDescription("Note that each category takes priority over the previous. Configs update immediately, especially while in-game if using RepoConfig."));
 
             configEnableTimer = Config.Bind("1 - Timer", "EnableTimer", true,

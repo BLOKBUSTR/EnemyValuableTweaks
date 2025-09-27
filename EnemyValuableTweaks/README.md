@@ -1,7 +1,5 @@
 # EnemyValuableTweaks
 
-[![Example video](https://i.ytimg.com/vi/ZvFP85-bcpY/hqdefault.jpg)](https://www.youtube.com/watch?v=ZvFP85-bcpY "Example video") placeholder
-
 Are you sick of those moments where you've put so much effort into tossing a monster down a pit, only for the orb to bounce around and break on its own without giving you a single chance to get anywhere within grabbing range?
 
 I am, because this happened WAY TOO MANY TIMES to me. So, I decided to fix this annoyance myself with this mod.
@@ -31,7 +29,7 @@ Suggestions are welcome! Tell me what's on your mind in the [Discord Thread](htt
 Note that each category takes priority over the previous. Configs update immediately, especially while in-game if using RepoConfig.
 
 - Timer
-  - **EnableTimer**: Whether to enable the main timer that automatically disables indestructibility once expired.
+  - **EnableTimer**: Whether to enable the main timer that automatically disables indestructibility once expired. If disabled, the orb will never become destructible unless any of the following additional checks are enabled.
   - **TimerLength**: Time in seconds until the orb loses indestructibility. Vanilla default is 5 seconds.
 - Additional Checks
   - **AdditionalChecksDelay**: Time in seconds before all following checks activate after the orb has initially spawned. This option reads from the main timer, and will not work if greater than **TimerLength**. Set to 0 to disable.
@@ -54,4 +52,4 @@ This mod may potentially conflict with other mods that extensively patch the `St
 ## ❤️ Acknowledgements
 - Huge thanks to OrigamiCoder and Omniscye in the R.E.P.O. Modding Server for guiding and assisting me through the making of this mod!
 
-Please report any issues on [GitHub](https://github.com/BLOKBUSTR) or the [Discord Thread](https://discord.com/channels/1344557689979670578/1344699091959156787) (pending).
+Please report any issues on [GitHub](https://github.com/BLOKBUSTR/EnemyValuableTweaks) or the [Discord Thread](https://discord.com/channels/1344557689979670578/1344699091959156787) (pending).
