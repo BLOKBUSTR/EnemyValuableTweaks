@@ -1,6 +1,9 @@
 ﻿using HarmonyLib;
+using Photon.Pun;
+using Random = System.Random;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.VisualScripting;
 
 namespace EnemyValuableTweaks
 {
@@ -15,8 +18,57 @@ namespace EnemyValuableTweaks
         [HarmonyPostfix, HarmonyPatch(nameof(EnemyValuable.Start))]
         public static void StartPostfix(EnemyValuable __instance)
         {
-            EnemyValuableTweaks.Logger.LogInfo($"New EnemyValuable has spawned ({__instance.GetInstanceID()})");
+            EnemyValuableTweaks.Logger.LogInfo($"New EnemyValuable has spawned (InstanceID {__instance.GetInstanceID()} | ViewID {__instance.impactDetector.photonView.ViewID})");
             __instance.indestructibleTimer = EnemyValuableTweaks.configTimerLength.Value;
+            
+            var component = __instance.AddComponent<EnemyValuableSynchronizer>();
+            component.enemyValuable = __instance;
+            component.photonView = __instance.impactDetector.photonView;
+            
+            if (SemiFunc.IsNotMasterClient())
+            {
+                EnemyValuableTweaks.LogDebugGeneral("Is client, skipping probability calculations");
+                return;
+            }
+            EnemyValuableTweaks.LogDebugGeneral("Is host or singleplayer, calculating probability and sending to clients if multiplayer");
+            
+            float probability;
+            if (SemiFunc.MoonLevel() > 3)
+            {
+                probability = EnemyValuableTweaks.configSuperMoonExplosionProbability.Value;
+            }
+            else if (SemiFunc.MoonLevel() > 2)
+            {
+                probability = EnemyValuableTweaks.configFullMoonExplosionProbability.Value;
+            }
+            else if (SemiFunc.MoonLevel() > 1)
+            {
+                probability = EnemyValuableTweaks.configHalfMoonExplosionProbability.Value;
+            }
+            else if (SemiFunc.MoonLevel() > 0)
+            {
+                probability = EnemyValuableTweaks.configCrescentMoonExplosionProbability.Value;
+            }
+            else
+            {
+                probability = EnemyValuableTweaks.configInitialExplosionProbability.Value;
+            }
+            
+            switch (probability)
+            {
+                case <= 0f:
+                    component.SetExplosion(false);
+                    EnemyValuableTweaks.LogDebugGeneral("Probability is 0, EnemyValuable will never explode");
+                    return;
+                case >= 1f:
+                    component.SetExplosion(true);
+                    EnemyValuableTweaks.LogDebugGeneral("Probability is 1, EnemyValuable will always explode");
+                    return;
+            }
+
+            var rng = new Random().NextDouble();
+            component.SetExplosion(rng < probability);
+            EnemyValuableTweaks.LogDebugGeneral($"MoonLevel: {SemiFunc.MoonLevel()} | rng: {rng} | probability: {probability} | hasExplosion: {__instance.hasExplosion}");
         }
         
         [HarmonyPostfix, HarmonyPatch(nameof(EnemyValuable.Update))]
@@ -37,10 +89,7 @@ namespace EnemyValuableTweaks
             {
                 __instance.indestructibleTimer = 60f; // The edge case of absurdly long lag spikes scares me
             }
-            else if (__instance.indestructibleTimer > 0f && EnemyValuableTweaks.configEnableDebugLogs.Value)
-            {
-                EnemyValuableTweaks.Logger.LogDebug($"Time remaining: {__instance.indestructibleTimer}");
-            }
+            EnemyValuableTweaks.LogDebugTimers($"Time remaining: {__instance.indestructibleTimer}");
             
             // Delay additional checks, if configured
             if (EnemyValuableTweaks.configAdditionalChecksDelay.Value > 0f)
@@ -52,10 +101,7 @@ namespace EnemyValuableTweaks
                 if (_orbAdditionalCheckDelay[__instance] > 0f)
                 {
                     _orbAdditionalCheckDelay[__instance] -= Time.deltaTime;
-                    if (EnemyValuableTweaks.configEnableDebugLogs.Value)
-                    {
-                        EnemyValuableTweaks.Logger.LogDebug($"Delaying additional checks for: {_orbAdditionalCheckDelay[__instance]} ({__instance.GetInstanceID()})");
-                    }
+                    EnemyValuableTweaks.LogDebugTimers($"Delaying additional checks for: {_orbAdditionalCheckDelay[__instance]} ({__instance.GetInstanceID()})");
                     return;
                 }
             }
@@ -73,10 +119,7 @@ namespace EnemyValuableTweaks
                     Mathf.Abs(prevVel.x),
                     Mathf.Abs(prevVel.y),
                     Mathf.Abs(prevVel.z));
-                if (EnemyValuableTweaks.configEnableDebugLogs.Value)
-                {
-                    EnemyValuableTweaks.Logger.LogDebug($"curVel: {curVel} | prevVel: {prevVel} | combined: {vel}");
-                }
+                EnemyValuableTweaks.LogDebugTimers($"curVel: {curVel} | prevVel: {prevVel} | combined: {vel}");
                 if (vel < EnemyValuableTweaks.configVelocityThreshold.Value)
                 {
                     MakeDestructible(__instance);
@@ -97,20 +140,14 @@ namespace EnemyValuableTweaks
                     if (!_orbGrabTimers.ContainsKey(__instance))
                     {
                         _orbGrabTimers[__instance] = EnemyValuableTweaks.configPlayerHoldTime.Value;
-                        if (EnemyValuableTweaks.configEnableDebugLogs.Value)
-                        {
-                            EnemyValuableTweaks.Logger.LogDebug($"Player grabbed ({__instance.GetInstanceID()})");
-                        }
+                        EnemyValuableTweaks.LogDebugTimers($"Player grabbed ({__instance.GetInstanceID()})");
                     }
                     
                     HandleTimerDictionaries(_orbGrabTimers, __instance);
                 }
                 else if (_orbGrabTimers.Remove(__instance))
                 {
-                    if (EnemyValuableTweaks.configEnableDebugLogs.Value)
-                    {
-                        EnemyValuableTweaks.Logger.LogDebug($"Player let go ({__instance.GetInstanceID()})");
-                    }
+                    EnemyValuableTweaks.LogDebugTimers($"Player let go ({__instance.GetInstanceID()})");
                 }
             }
             
@@ -127,30 +164,21 @@ namespace EnemyValuableTweaks
                     if (!(_orbCartTimers.ContainsKey(__instance)))
                     {
                         _orbCartTimers[__instance] = EnemyValuableTweaks.configSafeAreaTime.Value;
-                        if (EnemyValuableTweaks.configEnableDebugLogs.Value)
-                        {
-                            EnemyValuableTweaks.Logger.LogDebug($"Placed in safe area ({__instance.GetInstanceID()})");
-                        }
+                        EnemyValuableTweaks.LogDebugTimers($"Placed in safe area ({__instance.GetInstanceID()})");
                     }
                     
                     HandleTimerDictionaries(_orbCartTimers, __instance);
                 }
                 else if (_orbCartTimers.Remove(__instance))
                 {
-                    if (EnemyValuableTweaks.configEnableDebugLogs.Value)
-                    {
-                        EnemyValuableTweaks.Logger.LogDebug($"Removed from safe area ({__instance.GetInstanceID()})");
-                    }
+                    EnemyValuableTweaks.LogDebugTimers($"Removed from safe area ({__instance.GetInstanceID()})");
                 }
             }
         }
 
         private static void HandleTimerDictionaries(Dictionary<object, float> d, EnemyValuable i)
         {
-            if (EnemyValuableTweaks.configEnableDebugLogs.Value)
-            {
-                EnemyValuableTweaks.Logger.LogDebug($"Dictionary time remaining: {d[i]} {i.GetInstanceID()}");
-            }
+            EnemyValuableTweaks.LogDebugTimers($"Dictionary time remaining: {d[i]} {i.GetInstanceID()}");
             d[i] -= Time.deltaTime;
             
             if (!(d[i] <= 0f)) return;
@@ -164,14 +192,38 @@ namespace EnemyValuableTweaks
             i.indestructibleTimer = 0f;
             i.impactDetector.destroyDisable = false;
             _orbAdditionalCheckDelay.Remove(i);
-            EnemyValuableTweaks.Logger.LogInfo($"Made destructible ({i.GetInstanceID()})");
+            EnemyValuableTweaks.Logger.LogInfo($"Made EnemyValuable destructible (InstanceID {i.GetInstanceID()} | ViewID {i.impactDetector.photonView.ViewID})");
         }
     }
 }
 
-/*
-if (EnemyValuableTweaks.configEnableDebugLogs.Value)
+// TODO - RPC currently does not work on clients, need to fix
+public class EnemyValuableSynchronizer : MonoBehaviourPun
 {
-    EnemyValuableTweaks.Logger.LogDebug($"");
+    #pragma warning disable CS8618
+    public EnemyValuable enemyValuable;
+    public new PhotonView photonView;
+    #pragma warning restore CS8618
+
+    public void SetExplosion(bool state)
+    {
+        if (SemiFunc.IsNotMasterClient()) return;
+        if (!SemiFunc.IsMultiplayer())
+        {
+            SetExplosionRPC(state);
+            EnemyValuableTweaks.EnemyValuableTweaks.LogDebugGeneral($"Set hasExplosion = {state}");
+        }
+        else
+        {
+            photonView.RPC(nameof(SetExplosionRPC), RpcTarget.All, state);
+            EnemyValuableTweaks.EnemyValuableTweaks.LogDebugGeneral($"Called SetExplosionRPC on clients (hasExplosion = {state})");
+        }
+    }
+
+    [PunRPC]
+    public void SetExplosionRPC(bool state, PhotonMessageInfo info = default)
+    {
+        enemyValuable.hasExplosion = state;
+        EnemyValuableTweaks.EnemyValuableTweaks.LogDebugGeneral($"Received SetExplosionRPC from host (hasExplosion = {state})");
+    }
 }
-*/

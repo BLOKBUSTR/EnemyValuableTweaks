@@ -1,7 +1,7 @@
 {
   "name": "EnemyValuableTweaks",
-  "description": "Tweaks the indestructible behavior of the EnemyValuable (orb) to make it a little more fair. Fully configurable.",
-  "version_number": "1.0.1",
+  "description": "Tweaks the EnemyValuable (orb) to make it a little more fair and interesting. Fully configurable.",
+  "version_number": "1.0.2",
   "dependencies": [
     "BepInEx-BepInExPack-5.4.2100"
   ],

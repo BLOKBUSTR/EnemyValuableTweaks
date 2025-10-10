@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace EnemyValuableTweaks
 {
-    [BepInPlugin("BLOKBUSTR.EnemyValuableTweaks", "EnemyValuableTweaks", "1.0.1")]
+    [BepInPlugin("BLOKBUSTR.EnemyValuableTweaks", "EnemyValuableTweaks", "1.0.2")]
     public class EnemyValuableTweaks : BaseUnityPlugin
     {
         internal static EnemyValuableTweaks Instance { get; private set; } = null!;
@@ -31,7 +31,14 @@ namespace EnemyValuableTweaks
         public static ConfigEntry<bool> configEnableSafeAreaCheck;
         public static ConfigEntry<float> configSafeAreaTime;
 
-        public static ConfigEntry<bool> configEnableDebugLogs;
+        public static ConfigEntry<float> configInitialExplosionProbability;
+        public static ConfigEntry<float> configCrescentMoonExplosionProbability; // Level 5
+        public static ConfigEntry<float> configHalfMoonExplosionProbability; // Level 10
+        public static ConfigEntry<float> configFullMoonExplosionProbability; // Level 15
+        public static ConfigEntry<float> configSuperMoonExplosionProbability; // Level 20
+
+        private static ConfigEntry<bool> _configEnableDebugTimerLogs;
+        private static ConfigEntry<bool> _configEnableDebugGeneralLogs;
         #pragma warning restore CS8618
 
         private void Awake()
@@ -68,9 +75,27 @@ namespace EnemyValuableTweaks
                 new ConfigDescription("Time in seconds that the orb must remain in a safe area to disable indestructibility. Works very much like PlayerHoldTime.",
                 new AcceptableValueRange<float>(0f, 3f)));
 
-            configEnableDebugLogs = Config.Bind("Debug", "EnableDebugLogs", false,
-                new ConfigDescription("Enable all debug logs for this mod. Note that this will create quite a bit of spam in the console, so please keep this disabled for normal gameplay!"));
-
+            configInitialExplosionProbability = Config.Bind("6 - Moon Phase Explosion Probability", "InitialExplosionProbability", 0f,
+                new ConfigDescription("The probability of orbs exploding at the start of a new game, before any moon phases have even taken effect.",
+                new AcceptableValueRange<float>(0f, 1f)));
+            configCrescentMoonExplosionProbability = Config.Bind("6 - Moon Phase Explosion Probability", "CrescentMoonExplosionProbability", .01f, // this 1% chance might be pretty funny
+                new ConfigDescription("The probability of orbs exploding during the Crescent Moon phase, beginning on Level 5.",
+                new AcceptableValueRange<float>(0f, 1f)));
+            configHalfMoonExplosionProbability = Config.Bind("6 - Moon Phase Explosion Probability", "HalfMoonExplosionProbability", .1f,
+                new ConfigDescription("The probability of orbs exploding during the Half Moon phase, beginning on Level 10.",
+                new AcceptableValueRange<float>(0f, 1f)));
+            configFullMoonExplosionProbability = Config.Bind("6 - Moon Phase Explosion Probability", "FullMoonExplosionProbability", .35f,
+                new ConfigDescription("The probability of orbs exploding during the Full Moon phase, beginning on Level 15.",
+                new AcceptableValueRange<float>(0f, 1f)));
+            configSuperMoonExplosionProbability = Config.Bind("6 - Moon Phase Explosion Probability", "SuperMoonExplosionProbability", .95f,
+                new ConfigDescription("The probability of orbs exploding during the Super Moon phase, beginning on Level 20.",
+                new AcceptableValueRange<float>(0f, 1f)));
+            
+            _configEnableDebugTimerLogs = Config.Bind("Debug", "EnableDebugTimerLogs", false,
+                new ConfigDescription("Enable debug logs for this mod's timers. \"Debug\" or \"All\" must be included in Logging.Console.LogLevels in the BepInEx config to be able to see these logs. Note that this will create a lot of spam in the console, so please keep this disabled for normal gameplay!"));
+            _configEnableDebugGeneralLogs = Config.Bind("Debug", "EnableDebugCalculationLogs", false,
+                new ConfigDescription("Enable debug logs for other calculations performed by this mod. Same considerations as EnableDebugTimerLogs."));
+            
             Instance = this;
 
             this.gameObject.transform.parent = null;
@@ -108,9 +133,15 @@ namespace EnemyValuableTweaks
             Harmony?.UnpatchSelf();
         }
 
-        private void Update()
+        internal static void LogDebugTimers(string message)
         {
-            
+            if (!_configEnableDebugTimerLogs.Value) return;
+            Logger.LogDebug(message);
+        }
+        internal static void LogDebugGeneral(string message)
+        {
+            if (!_configEnableDebugGeneralLogs.Value) return;
+            Logger.LogDebug(message);
         }
     }
 }

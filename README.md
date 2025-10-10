@@ -1,12 +1,13 @@
 # EnemyValuableTweaks
 
+[REVISE]
 Are you sick of those moments where you've put so much effort into tossing a monster down a pit, only for the orb to bounce everywhere and break on its own without giving you a single chance to get anywhere within grabbing range?
 
 I am, because this happened WAY TOO MANY TIMES to me. So, I decided to fix this annoyance myself with this mod.
 
 ❗️ **All players must have this mod installed, and all clients must have the same config settings as the host!** Otherwise, visual desync at the very least will occur.
 
-## ❇️ Current Features
+## ❇️ Features
 
 ⏲️ Enable, disable, and adjust the length of the indestructible timer duration of the orb.
 
@@ -14,20 +15,26 @@ I am, because this happened WAY TOO MANY TIMES to me. So, I decided to fix this 
 
 👐 Disable indestructibility when a player grabs ahold of it, since at this point the safety of the orb is now in your hands... *get it?*
 
-🛒 Last but not least, disable indestructibility when the orb has been placed in a safe area, such as the C.A.R.T. or an extraction point.
+🛒 Disable indestructibility when the orb has been placed in a safe area, such as the C.A.R.T. or an extraction point.
 
-This mod is extensively configurable, so you can fine-tune the orb's behavior to your liking. The default configs are intended to make a slightly more fair experience than vanilla without feeling overpowered. If you *do* want to make it either completely overpowered or brutally unfair, you have all the freedom to do so!
+🎲 Configure the probability of an orb exploding upon destruction for each Moon Phase! This can add a little more tension and unpredictability when handling orbs.
+
+This mod is extensively configurable, so you can fine-tune the orb's behavior to your liking. The default configs are intended to make a slightly more fair and interesting experience than vanilla without feeling overpowered. If you *do* want to make it either completely overpowered or brutally unfair, you have all the freedom to do so!
 
 ## 🚧 Roadmap
 
-- Automatic config syncing
-- Ability to adjust explosion probability for each moon phase?
+- Improve multiplayer synchronization
+- Automatically edit Moon Phase modifier descriptions to tell current explosion probability
+- Ability to configure the amount of orbs that can be dropped per level, and perhaps even per enemy
 
 Suggestions are welcome! Tell me what's on your mind in the [Discord Thread](https://discord.com/channels/1344557689979670578/1421636750174060635).
 
 ## 🔧 Configuration
 
 Note that each category somewhat takes priority over the previous. Configs update immediately, especially while in-game if using RepoConfig.
+
+<details>
+    <summary>Click to expand config list:</summary>
 
 - Timer
     - **EnableTimer**: Whether to enable the main timer that automatically disables indestructibility once expired. If disabled, the orb will never become destructible unless any of the following additional checks are enabled.
@@ -43,8 +50,17 @@ Note that each category somewhat takes priority over the previous. Configs updat
 - Safe Areas
     - **EnableSafeAreaCheck**: Disables indestructibility if the orb has been placed inside a safe area, such as the C.A.R.T. or an extraction point.
     - **SafeAreaTime**: Time in seconds that the orb must remain in a safe area to disable indestructibility. Works exactly like **PlayerHoldTime**.
+- Moon Phase Explosion Probability
+    - **InitialExplosionProbability**: The probability of orbs exploding at the start of a new game, before any moon phases have even taken effect.
+    - **CrescentMoonExplosionProbability**: The probability of orbs exploding during the Crescent Moon phase, beginning on Level 5.
+    - **HalfMoonExplosionProbability**: The probability of orbs exploding during the Half Moon phase, beginning on Level 10.
+    - **FullMoonExplosionProbability**: The probability of orbs exploding during the Full Moon phase, beginning on Level 15.
+    - **SuperMoonExplosionProbability**: The probability of orbs exploding during the Super Moon phase, beginning on Level 20.
 - Debug
-    - **EnableDebugLogs**: Enable all debug logs for this mod. Note that this will create a lot of spam in the console, so please keep this disabled for normal gameplay!
+    - **EnableDebugTimerLogs**: Enable debug logs for this mod's timers. "Debug" or "All" must be included in Logging.Console.**LogLevels** in the BepInEx config to be able to see these logs. Note that this will create a lot of spam in the console, so please keep this disabled for normal gameplay!
+    - **EnableDebugCalculationLogs**: Enable debug logs for other calculations performed by this mod. Same considerations as **EnableDebugTimerLogs**.
+
+</details>
 
 ## ⚠️ Compatibility
 
