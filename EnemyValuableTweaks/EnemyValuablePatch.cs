@@ -31,18 +31,14 @@ namespace EnemyValuableTweaks
         {
             // Skip all following logic if the orb is already supposed to be destructible
             if (__instance.indestructibleTimer < 0f)
-            {
                 MakeDestructible(__instance);
-            }
             if (!__instance.impactDetector.destroyDisable)
-            {
                 return;
-            }
             
             // Primary timer
             if (!EnemyValuableTweaks.configEnableTimer.Value)
             {
-                __instance.indestructibleTimer = 60f; // The edge case of absurdly long lag spikes scares me
+                __instance.indestructibleTimer = 0f;
             }
             EnemyValuableTweaks.LogDebugTimers($"Time remaining: {__instance.indestructibleTimer}");
             
@@ -130,7 +126,7 @@ namespace EnemyValuableTweaks
                 }
             }
         }
-
+        
         private static void HandleTimerDictionaries(Dictionary<object, float> d, EnemyValuable i)
         {
             EnemyValuableTweaks.LogDebugTimers($"Dictionary time remaining: {d[i]} {i.GetInstanceID()}");
@@ -141,7 +137,7 @@ namespace EnemyValuableTweaks
             MakeDestructible(i);
             d.Remove(i);
         }
-
+        
         private static void MakeDestructible(EnemyValuable i)
         {
             i.indestructibleTimer = 0f;
@@ -159,7 +155,7 @@ namespace EnemyValuableTweaks
             var component = i.GetComponent<EnemyValuableSynchronizer>();
             if (component == null)
             {
-                EnemyValuableTweaks.Logger.LogError("Component not found!");
+                EnemyValuableTweaks.Logger.LogError("EnemyValuableSynchronizer component not found!");
                 return;
             }
             
@@ -210,7 +206,7 @@ public class EnemyValuableSynchronizer : MonoBehaviourPun
     public EnemyValuable enemyValuable;
     public new PhotonView photonView;
     #pragma warning restore CS8618
-
+    
     public void SetExplosion(bool state)
     {
         if (SemiFunc.IsNotMasterClient()) return;
@@ -225,7 +221,7 @@ public class EnemyValuableSynchronizer : MonoBehaviourPun
             EnemyValuableTweaks.EnemyValuableTweaks.LogDebugGeneral($"Called SetExplosionRPC on clients (hasExplosion = {state})");
         }
     }
-
+    
     [PunRPC]
     public void SetExplosionRPC(bool state, PhotonMessageInfo info = default)
     {

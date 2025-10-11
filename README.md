@@ -1,9 +1,8 @@
 # EnemyValuableTweaks
 
-[REVISE]
-Are you sick of those moments where you've put so much effort into tossing a monster down a pit, only for the orb to bounce everywhere and break on its own without giving you a single chance to get anywhere within grabbing range?
+This mod introduces various mechanical tweaks to the Enemy Valuable (the pink soul orb that drops from killed enemies) to make it a little more fair and interesting in certain scenarios.
 
-I am, because this happened WAY TOO MANY TIMES to me. So, I decided to fix this annoyance myself with this mod.
+You wanna know what my first motivation for this mod was? You know those moments when you put so much effort into dealing with an enemy, and you decide to throw it down a pit, only for the orb to bounce everywhere and break on its own without giving you a single chance to get anywhere close to catch it? Yeah, I know it too well because it happened WAY TOO MANY TIMES to me. So, I decided to make this mod as my own solution. On top of that, I figured it would be nice to implement some extra functionality to make the orb a little more interesting from vanilla gameplay.
 
 ❗️ **All players must have this mod installed, and all clients must have the same config settings as the host!** Otherwise, visual desync at the very least will occur.
 
@@ -31,7 +30,7 @@ Suggestions are welcome! Tell me what's on your mind in the [Discord Thread](htt
 
 ## 🔧 Configuration
 
-Note that each category somewhat takes priority over the previous. Configs update immediately, especially while in-game if using RepoConfig.
+Configs update immediately, especially while in-game if using RepoConfig.
 
 <details>
     <summary>Click to expand config list:</summary>
@@ -40,9 +39,9 @@ Note that each category somewhat takes priority over the previous. Configs updat
     - **EnableTimer**: Whether to enable the main timer that automatically disables indestructibility once expired. If disabled, the orb will never become destructible unless any of the following additional checks are enabled.
     - **TimerLength**: Time in seconds until the orb loses indestructibility. Vanilla default is 5 seconds.
 - Additional Checks
-    - **AdditionalChecksDelay**: Time in seconds before all following checks activate after the orb has initially spawned. This option reads from the main timer, and will not work if greater than **TimerLength**. Set to 0 to disable.
+    - **AdditionalChecksDelay**: Time in seconds before all following checks activate after the orb has initially spawned. Will not work if greater than **TimerLength**. Additional checks take precedence over the main timer, meaning they will cut off the timer early if any one of their conditions have been satisfied.
 - Velocity
-    - **EnableVelocityCheck**: Automatically disables indestructibility when the orb slows down to a certain velocity threshold. Takes precedence over the timer, meaning it will cut off the timer early if the orb has already reached a standstill.
+    - **EnableVelocityCheck**: Automatically disables indestructibility when the orb slows down to the specified velocity threshold.
     - **VelocityThreshold**: The minimum threshold for the velocity check.
 - Player Grab
     - **EnablePlayerHold**: Automatically disables indestructibility when the orb is grabbed by a player.
@@ -58,7 +57,7 @@ Note that each category somewhat takes priority over the previous. Configs updat
     - **SuperMoonExplosionProbability**: The probability of orbs exploding during the Super Moon phase, beginning on Level 20.
 - Debug
     - **EnableDebugTimerLogs**: Enable debug logs for this mod's timers. "Debug" or "All" must be included in Logging.Console.**LogLevels** in the BepInEx config to be able to see these logs. Note that this will create a lot of spam in the console, so please keep this disabled for normal gameplay!
-    - **EnableDebugCalculationLogs**: Enable debug logs for other calculations performed by this mod. Same considerations as **EnableDebugTimerLogs**.
+    - **EnableDebugGeneralLogs**: Enable debug logs for other calculations and logic performed by this mod.
 
 </details>
 
