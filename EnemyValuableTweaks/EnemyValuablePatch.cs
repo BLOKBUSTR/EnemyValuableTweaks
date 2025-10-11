@@ -24,51 +24,6 @@ namespace EnemyValuableTweaks
             var component = __instance.AddComponent<EnemyValuableSynchronizer>();
             component.enemyValuable = __instance;
             component.photonView = __instance.impactDetector.photonView;
-            
-            if (SemiFunc.IsNotMasterClient())
-            {
-                EnemyValuableTweaks.LogDebugGeneral("Is client, skipping probability calculations");
-                return;
-            }
-            EnemyValuableTweaks.LogDebugGeneral("Is host or singleplayer, calculating probability and sending to clients if multiplayer");
-            
-            float probability;
-            if (SemiFunc.MoonLevel() > 3)
-            {
-                probability = EnemyValuableTweaks.configSuperMoonExplosionProbability.Value;
-            }
-            else if (SemiFunc.MoonLevel() > 2)
-            {
-                probability = EnemyValuableTweaks.configFullMoonExplosionProbability.Value;
-            }
-            else if (SemiFunc.MoonLevel() > 1)
-            {
-                probability = EnemyValuableTweaks.configHalfMoonExplosionProbability.Value;
-            }
-            else if (SemiFunc.MoonLevel() > 0)
-            {
-                probability = EnemyValuableTweaks.configCrescentMoonExplosionProbability.Value;
-            }
-            else
-            {
-                probability = EnemyValuableTweaks.configInitialExplosionProbability.Value;
-            }
-            
-            switch (probability)
-            {
-                case <= 0f:
-                    component.SetExplosion(false);
-                    EnemyValuableTweaks.LogDebugGeneral("Probability is 0, EnemyValuable will never explode");
-                    return;
-                case >= 1f:
-                    component.SetExplosion(true);
-                    EnemyValuableTweaks.LogDebugGeneral("Probability is 1, EnemyValuable will always explode");
-                    return;
-            }
-
-            var rng = new Random().NextDouble();
-            component.SetExplosion(rng < probability);
-            EnemyValuableTweaks.LogDebugGeneral($"MoonLevel: {SemiFunc.MoonLevel()} | rng: {rng} | probability: {probability} | hasExplosion: {__instance.hasExplosion}");
         }
         
         [HarmonyPostfix, HarmonyPatch(nameof(EnemyValuable.Update))]
@@ -193,11 +148,62 @@ namespace EnemyValuableTweaks
             i.impactDetector.destroyDisable = false;
             _orbAdditionalCheckDelay.Remove(i);
             EnemyValuableTweaks.Logger.LogInfo($"Made EnemyValuable destructible (InstanceID {i.GetInstanceID()} | ViewID {i.impactDetector.photonView.ViewID})");
+            
+            if (SemiFunc.IsNotMasterClient())
+            {
+                EnemyValuableTweaks.LogDebugGeneral("Is client, skipping probability calculations");
+                return;
+            }
+            EnemyValuableTweaks.LogDebugGeneral("Is host or singleplayer, calculating probability and sending to clients if multiplayer");
+            
+            var component = i.GetComponent<EnemyValuableSynchronizer>();
+            if (component == null)
+            {
+                EnemyValuableTweaks.Logger.LogError("Component not found!");
+                return;
+            }
+            
+            float probability;
+            if (SemiFunc.MoonLevel() > 3)
+            {
+                probability = EnemyValuableTweaks.configSuperMoonExplosionProbability.Value;
+            }
+            else if (SemiFunc.MoonLevel() > 2)
+            {
+                probability = EnemyValuableTweaks.configFullMoonExplosionProbability.Value;
+            }
+            else if (SemiFunc.MoonLevel() > 1)
+            {
+                probability = EnemyValuableTweaks.configHalfMoonExplosionProbability.Value;
+            }
+            else if (SemiFunc.MoonLevel() > 0)
+            {
+                probability = EnemyValuableTweaks.configCrescentMoonExplosionProbability.Value;
+            }
+            else
+            {
+                probability = EnemyValuableTweaks.configInitialExplosionProbability.Value;
+            }
+            
+            switch (probability)
+            {
+                case <= 0f:
+                    component.SetExplosion(false);
+                    EnemyValuableTweaks.LogDebugGeneral("Probability is 0, EnemyValuable will never explode");
+                    return;
+                case >= 1f:
+                    component.SetExplosion(true);
+                    EnemyValuableTweaks.LogDebugGeneral("Probability is 1, EnemyValuable will always explode");
+                    return;
+            }
+            
+            var rng = new Random().NextDouble();
+            component.SetExplosion(rng < probability);
+            EnemyValuableTweaks.LogDebugGeneral($"MoonLevel: {SemiFunc.MoonLevel()} | rng: {rng} | probability: {probability} | hasExplosion: {i.hasExplosion}");
         }
     }
 }
 
-// TODO - RPC currently does not work on clients, need to fix
 public class EnemyValuableSynchronizer : MonoBehaviourPun
 {
     #pragma warning disable CS8618
