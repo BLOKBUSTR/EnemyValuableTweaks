@@ -7,10 +7,10 @@ using Unity.VisualScripting;
 
 namespace EnemyValuableTweaks
 {
-    [HarmonyPatch(typeof(EnemyValuable))]
-    internal static class EnemyValuablePatch
+    [HarmonyPatch(typeof(PlayerController))]
+    static class EnemyValuablePatch
     {
-        // Dictionaries used as timers across multiple instances
+        // Dictionaries used as timers across multiple orb instances
         private static Dictionary<object, float> _orbAdditionalCheckDelay = [];
         private static Dictionary<object, float> _orbGrabTimers = [];
         private static Dictionary<object, float> _orbCartTimers = [];
@@ -202,10 +202,10 @@ namespace EnemyValuableTweaks
 
 public class EnemyValuableSynchronizer : MonoBehaviourPun
 {
-    #pragma warning disable CS8618
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public EnemyValuable enemyValuable;
     public new PhotonView photonView;
-    #pragma warning restore CS8618
+#pragma warning restore CS8618
     
     public void SetExplosion(bool state)
     {

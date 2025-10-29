@@ -1,8 +1,12 @@
 # Changelog
 
+## 1.0.3
+- TODO: Recompiled against R.E.P.O. 0.3.X (The Monster Update) to indicate compatibility.
+- Refactored project structure.
+
 ### 1.0.2
 - Implemented configurable explosion probability for each moon phase.
-- Cleaned up debug logging implementation and split logs into two types: Timers and Calculations.
+- Cleaned up debug logging implementation and split logs into two types: Timers and General.
 - Adjusted README's "Configuration" section to use an expandable list to slightly reduce initial clutter, and fixed some other discrepancies.
 
 ### 1.0.1
