@@ -7,13 +7,13 @@ using Unity.VisualScripting;
 
 namespace EnemyValuableTweaks
 {
-    [HarmonyPatch(typeof(PlayerController))]
+    [HarmonyPatch(typeof(EnemyValuable))]
     static class EnemyValuablePatch
     {
         // Dictionaries used as timers across multiple orb instances
-        private static Dictionary<object, float> _orbAdditionalCheckDelay = [];
-        private static Dictionary<object, float> _orbGrabTimers = [];
-        private static Dictionary<object, float> _orbCartTimers = [];
+        private static readonly Dictionary<object, float> OrbAdditionalCheckDelay = [];
+        private static readonly Dictionary<object, float> OrbGrabTimers = [];
+        private static readonly Dictionary<object, float> OrbCartTimers = [];
         
         [HarmonyPostfix, HarmonyPatch(nameof(EnemyValuable.Start))]
         public static void StartPostfix(EnemyValuable __instance)
@@ -38,21 +38,24 @@ namespace EnemyValuableTweaks
             // Primary timer
             if (!EnemyValuableTweaks.configEnableTimer.Value)
             {
-                __instance.indestructibleTimer = 0f;
+                __instance.indestructibleTimer = 60f;
             }
-            EnemyValuableTweaks.LogDebugTimers($"Time remaining: {__instance.indestructibleTimer}");
+            else
+            {
+                EnemyValuableTweaks.LogDebugTimers($"Time remaining: {__instance.indestructibleTimer}");
+            }
             
             // Delay additional checks, if configured
             if (EnemyValuableTweaks.configAdditionalChecksDelay.Value > 0f)
             {
-                if (!_orbAdditionalCheckDelay.ContainsKey(__instance))
+                if (!OrbAdditionalCheckDelay.ContainsKey(__instance))
                 {
-                    _orbAdditionalCheckDelay[__instance] = EnemyValuableTweaks.configAdditionalChecksDelay.Value;
+                    OrbAdditionalCheckDelay[__instance] = EnemyValuableTweaks.configAdditionalChecksDelay.Value;
                 }
-                if (_orbAdditionalCheckDelay[__instance] > 0f)
+                if (OrbAdditionalCheckDelay[__instance] > 0f)
                 {
-                    _orbAdditionalCheckDelay[__instance] -= Time.deltaTime;
-                    EnemyValuableTweaks.LogDebugTimers($"Delaying additional checks for: {_orbAdditionalCheckDelay[__instance]} ({__instance.GetInstanceID()})");
+                    OrbAdditionalCheckDelay[__instance] -= Time.deltaTime;
+                    EnemyValuableTweaks.LogDebugTimers($"Delaying additional checks for: {OrbAdditionalCheckDelay[__instance]} ({__instance.GetInstanceID()})");
                     return;
                 }
             }
@@ -88,15 +91,15 @@ namespace EnemyValuableTweaks
                         MakeDestructible(__instance);
                         return;
                     }
-                    if (!_orbGrabTimers.ContainsKey(__instance))
+                    if (!OrbGrabTimers.ContainsKey(__instance))
                     {
-                        _orbGrabTimers[__instance] = EnemyValuableTweaks.configPlayerHoldTime.Value;
+                        OrbGrabTimers[__instance] = EnemyValuableTweaks.configPlayerHoldTime.Value;
                         EnemyValuableTweaks.LogDebugTimers($"Player grabbed ({__instance.GetInstanceID()})");
                     }
                     
-                    HandleTimerDictionaries(_orbGrabTimers, __instance);
+                    HandleTimerDictionaries(OrbGrabTimers, __instance);
                 }
-                else if (_orbGrabTimers.Remove(__instance))
+                else if (OrbGrabTimers.Remove(__instance))
                 {
                     EnemyValuableTweaks.LogDebugTimers($"Player let go ({__instance.GetInstanceID()})");
                 }
@@ -112,15 +115,15 @@ namespace EnemyValuableTweaks
                         MakeDestructible(__instance);
                         return;
                     }
-                    if (!(_orbCartTimers.ContainsKey(__instance)))
+                    if (!(OrbCartTimers.ContainsKey(__instance)))
                     {
-                        _orbCartTimers[__instance] = EnemyValuableTweaks.configSafeAreaTime.Value;
+                        OrbCartTimers[__instance] = EnemyValuableTweaks.configSafeAreaTime.Value;
                         EnemyValuableTweaks.LogDebugTimers($"Placed in safe area ({__instance.GetInstanceID()})");
                     }
                     
-                    HandleTimerDictionaries(_orbCartTimers, __instance);
+                    HandleTimerDictionaries(OrbCartTimers, __instance);
                 }
-                else if (_orbCartTimers.Remove(__instance))
+                else if (OrbCartTimers.Remove(__instance))
                 {
                     EnemyValuableTweaks.LogDebugTimers($"Removed from safe area ({__instance.GetInstanceID()})");
                 }
@@ -142,7 +145,7 @@ namespace EnemyValuableTweaks
         {
             i.indestructibleTimer = 0f;
             i.impactDetector.destroyDisable = false;
-            _orbAdditionalCheckDelay.Remove(i);
+            OrbAdditionalCheckDelay.Remove(i);
             EnemyValuableTweaks.Logger.LogInfo($"Made EnemyValuable destructible (InstanceID {i.GetInstanceID()} | ViewID {i.impactDetector.photonView.ViewID})");
             
             if (SemiFunc.IsNotMasterClient())
