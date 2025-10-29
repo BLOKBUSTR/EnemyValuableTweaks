@@ -1,7 +1,7 @@
 # Changelog
 
 ## 1.0.3
-- TODO: Recompiled against R.E.P.O. 0.3.X (The Monster Update) to indicate compatibility.
+- Recompiled for R.E.P.O. 0.3.0 (The Monster Update) to indicate compatibility.
 - Refactored project structure.
 
 ### 1.0.2

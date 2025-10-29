@@ -8,12 +8,12 @@ using Unity.VisualScripting;
 namespace EnemyValuableTweaks
 {
     [HarmonyPatch(typeof(EnemyValuable))]
-    static class EnemyValuablePatch
+    internal static class EnemyValuablePatch
     {
         // Dictionaries used as timers across multiple orb instances
         private static readonly Dictionary<object, float> OrbAdditionalCheckDelay = [];
         private static readonly Dictionary<object, float> OrbGrabTimers = [];
-        private static readonly Dictionary<object, float> OrbCartTimers = [];
+        private static readonly Dictionary<object, float> OrbSafeAreaTimers = [];
         
         [HarmonyPostfix, HarmonyPatch(nameof(EnemyValuable.Start))]
         public static void StartPostfix(EnemyValuable __instance)
@@ -115,15 +115,15 @@ namespace EnemyValuableTweaks
                         MakeDestructible(__instance);
                         return;
                     }
-                    if (!(OrbCartTimers.ContainsKey(__instance)))
+                    if (!(OrbSafeAreaTimers.ContainsKey(__instance)))
                     {
-                        OrbCartTimers[__instance] = EnemyValuableTweaks.configSafeAreaTime.Value;
+                        OrbSafeAreaTimers[__instance] = EnemyValuableTweaks.configSafeAreaTime.Value;
                         EnemyValuableTweaks.LogDebugTimers($"Placed in safe area ({__instance.GetInstanceID()})");
                     }
                     
-                    HandleTimerDictionaries(OrbCartTimers, __instance);
+                    HandleTimerDictionaries(OrbSafeAreaTimers, __instance);
                 }
-                else if (OrbCartTimers.Remove(__instance))
+                else if (OrbSafeAreaTimers.Remove(__instance))
                 {
                     EnemyValuableTweaks.LogDebugTimers($"Removed from safe area ({__instance.GetInstanceID()})");
                 }
@@ -205,10 +205,10 @@ namespace EnemyValuableTweaks
 
 public class EnemyValuableSynchronizer : MonoBehaviourPun
 {
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public EnemyValuable enemyValuable;
     public new PhotonView photonView;
-#pragma warning restore CS8618
+    #pragma warning restore CS8618
     
     public void SetExplosion(bool state)
     {
