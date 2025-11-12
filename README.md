@@ -18,12 +18,11 @@ You wanna know what my first motivation for this mod was? You know those moments
 
 🎲 Configure the probability of an orb exploding upon destruction for each Moon Phase! This can add a little more tension and unpredictability when handling orbs.
 
-🔢 **[NEW]** Configure the maximum amount of orbs that can spawn per enemy, per level. You can have as many or as few as you want, or even remove the limit entirely!
+🔢 **[NEW]** Configure the maximum amount of orbs that can spawn per enemy, per level. You can have as many or as few as you want, or even disable the limit entirely!
 
 This mod is extensively configurable, so you can fine-tune the orb's behavior to your liking. The default configs are intended to make a slightly more fair and interesting experience than vanilla without feeling overpowered. If you *do* want to make it either completely overpowered or brutally unfair, you have all the freedom to do so!
 
 ## 🚧 Roadmap
-
 - Improve multiplayer synchronization
 - Automatically edit Moon Phase modifier descriptions to tell current explosion probability
 
@@ -66,7 +65,10 @@ Configs update immediately, especially while in-game if using RepoConfig, unless
 
 ## ⚠️ Compatibility
 
-This mod may potentially conflict with other mods that extensively patch the `Start()` and `Update()` methods of `EnemyValuable`.
+This mod may potentially conflict with other mods that extensively patch these methods:
+- `EnemyValuable.Start()`
+- `EnemyValuable.Update()`
+- `EnemyHealth.Awake()`.
 
 ## ❤️ Acknowledgements
 - Huge thanks to OrigamiCoder and Omniscye in the R.E.P.O. Modding Server for helping me get started with modding, and for guiding me through the making of this mod!
