@@ -57,7 +57,7 @@ Configs update immediately, especially while in-game if using RepoConfig, unless
   - **FullMoonExplosionProbability**: The probability of orbs exploding during the Full Moon phase, beginning on Level 15.
   - **SuperMoonExplosionProbability**: The probability of orbs exploding during the Super Moon phase, beginning on Level 20.
 - Max Spawn Amount
-  - **MaxSpawnAmount**: The maximum amount of orbs that can spawn per level. Vanilla default is 3; set to 0 for no limit. This option only applies on level reload to prevent some degree of host abuse.
+  - **MaxSpawnAmount**: The maximum amount of orbs that can spawn per level. Vanilla default is 3; set to 0 for no limit. This option only applies on level reload.
 - Debug
   - **EnableDebugTimerLogs**: Enable debug logs for this mod's timers. "Debug" or "All" must be included in Logging.Console.**LogLevels** in the BepInEx config to be able to see these logs. Note that this will create a lot of spam in the console, so please keep this disabled for normal gameplay!
   - **EnableDebugGeneralLogs**: Enable debug logs for other calculations and logic performed by this mod.

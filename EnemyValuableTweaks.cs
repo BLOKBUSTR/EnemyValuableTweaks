@@ -89,7 +89,7 @@ namespace EnemyValuableTweaks
                 new AcceptableValueRange<float>(0f, 1f)));
             
             configMaxSpawnAmount = Config.Bind("7 - Max Spawn Amount", "MaxSpawnAmount", 3,
-                new ConfigDescription("The maximum amount of orbs that can spawn per enemy, per level. Vanilla default is 3; set to 0 for no limit. This option only applies on level reload to prevent some degree of host abuse.",
+                new ConfigDescription("The maximum amount of orbs that can spawn per enemy, per level. Vanilla default is 3; set to 0 for no limit. This option only applies on level reload.",
                 new AcceptableValueRange<int>(0, 100)));
             
             // Debug
