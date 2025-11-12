@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace EnemyValuableTweaks
 {
-    [BepInPlugin("BLOKBUSTR.EnemyValuableTweaks", "EnemyValuableTweaks", "1.0.3")]
+    [BepInPlugin("BLOKBUSTR.EnemyValuableTweaks", "EnemyValuableTweaks", "1.1.0")]
     public class EnemyValuableTweaks : BaseUnityPlugin
     {
         internal static EnemyValuableTweaks Instance { get; private set; } = null!;
@@ -34,6 +34,8 @@ namespace EnemyValuableTweaks
         public static ConfigEntry<float> configHalfMoonExplosionProbability; // Level 10
         public static ConfigEntry<float> configFullMoonExplosionProbability; // Level 15
         public static ConfigEntry<float> configSuperMoonExplosionProbability; // Level 20
+
+        public static ConfigEntry<int> configMaxSpawnAmount;
         
         private static ConfigEntry<bool> _configEnableDebugTimerLogs;
         private static ConfigEntry<bool> _configEnableDebugGeneralLogs;
@@ -79,13 +81,18 @@ namespace EnemyValuableTweaks
             configHalfMoonExplosionProbability = Config.Bind("6 - Moon Phase Explosion Probability", "HalfMoonExplosionProbability", .1f,
                 new ConfigDescription("The probability of orbs exploding during the Half Moon phase, beginning on Level 10.",
                 new AcceptableValueRange<float>(0f, 1f)));
-            configFullMoonExplosionProbability = Config.Bind("6 - Moon Phase Explosion Probability", "FullMoonExplosionProbability", .35f,
+            configFullMoonExplosionProbability = Config.Bind("6 - Moon Phase Explosion Probability", "FullMoonExplosionProbability", .2f,
                 new ConfigDescription("The probability of orbs exploding during the Full Moon phase, beginning on Level 15.",
                 new AcceptableValueRange<float>(0f, 1f)));
             configSuperMoonExplosionProbability = Config.Bind("6 - Moon Phase Explosion Probability", "SuperMoonExplosionProbability", .95f,
                 new ConfigDescription("The probability of orbs exploding during the Super Moon phase, beginning on Level 20.",
                 new AcceptableValueRange<float>(0f, 1f)));
             
+            configMaxSpawnAmount = Config.Bind("7 - Max Spawn Amount", "MaxSpawnAmount", 3,
+                new ConfigDescription("The maximum amount of orbs that can spawn per enemy, per level. Vanilla default is 3; set to 0 for no limit. This option only applies on level reload to prevent some degree of host abuse.",
+                new AcceptableValueRange<int>(0, 100)));
+            
+            // Debug
             _configEnableDebugTimerLogs = Config.Bind("Debug", "EnableDebugTimerLogs", false,
                 new ConfigDescription("Enable debug logs for this mod's timers. \"Debug\" or \"All\" must be included in Logging.Console.LogLevels in the BepInEx config to be able to see these logs. Note that this will create a lot of spam in the console, so please keep this disabled for normal gameplay!"));
             _configEnableDebugGeneralLogs = Config.Bind("Debug", "EnableDebugGeneralLogs", false,

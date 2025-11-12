@@ -1,6 +1,12 @@
 # Changelog
 
-## 1.0.3
+## 1.1.0
+- Added configurable max spawn amount.
+- Upgrade BepInEx dependency.
+
+---
+
+### 1.0.3
 - Recompiled for R.E.P.O. 0.3.0 (The Monster Update) to indicate compatibility.
 - Refactored project structure.
 

@@ -1,9 +1,9 @@
 {
   "name": "EnemyValuableTweaks",
-  "description": "Tweaks the EnemyValuable (orb) to make it a little more fair and interesting. Fully configurable.",
-  "version_number": "1.0.3",
+  "description": "Configurable tweaks to the EnemyValuable (orb) to make it a little more fair and interesting.",
+  "version_number": "1.1.0",
   "dependencies": [
-    "BepInEx-BepInExPack-5.4.2100"
+    "BepInEx-BepInExPack-5.4.2304"
   ],
   "website_url": "https://github.com/BLOKBUSTR/EnemyValuableTweaks"
 }
