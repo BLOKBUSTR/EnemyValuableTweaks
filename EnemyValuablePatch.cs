@@ -11,9 +11,9 @@ namespace EnemyValuableTweaks
     internal static class EnemyValuablePatch
     {
         // Dictionaries used as timers across multiple orb instances
-        private static readonly Dictionary<object, float> OrbAdditionalCheckDelay = [];
-        private static readonly Dictionary<object, float> OrbGrabTimers = [];
-        private static readonly Dictionary<object, float> OrbSafeAreaTimers = [];
+        private static readonly Dictionary<object, float> OrbAdditionalCheckDelay = new();
+        private static readonly Dictionary<object, float> OrbGrabTimers = new();
+        private static readonly Dictionary<object, float> OrbSafeAreaTimers = new();
         
         [HarmonyPostfix, HarmonyPatch(nameof(EnemyValuable.Start))]
         public static void StartPostfix(EnemyValuable __instance)
@@ -213,15 +213,15 @@ public class EnemyValuableSynchronizer : MonoBehaviourPun
     public void SetExplosion(bool state)
     {
         if (SemiFunc.IsNotMasterClient()) return;
-        if (!SemiFunc.IsMultiplayer())
-        {
-            SetExplosionRPC(state);
-            EnemyValuableTweaks.EnemyValuableTweaks.LogDebugGeneral($"Set hasExplosion = {state}");
-        }
-        else
+        if (SemiFunc.IsMultiplayer())
         {
             photonView.RPC(nameof(SetExplosionRPC), RpcTarget.All, state);
             EnemyValuableTweaks.EnemyValuableTweaks.LogDebugGeneral($"Called SetExplosionRPC on clients (hasExplosion = {state})");
+        }
+        else
+        {
+            SetExplosionRPC(state);
+            EnemyValuableTweaks.EnemyValuableTweaks.LogDebugGeneral($"Set hasExplosion = {state}");
         }
     }
     

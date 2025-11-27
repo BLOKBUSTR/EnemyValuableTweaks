@@ -1,5 +1,8 @@
 # Changelog
 
+### 1.x.x
+- Other minor code and README tweaks
+
 ### 1.1.0
 - Added configurable max spawn amount.
 - Upgrade BepInEx dependency.

@@ -71,6 +71,6 @@ This mod may potentially conflict with other mods that extensively patch these m
 - `EnemyHealth.Awake()`.
 
 ## ❤️ Acknowledgements
-- Huge thanks to OrigamiCoder and Omniscye in the R.E.P.O. Modding Server for helping me get started with modding, and for guiding me through the making of this mod!
+- Huge thanks to [OrigamiCoder](https://thunderstore.io/c/repo/p/OrigamiCoder/) and [Omniscye](https://thunderstore.io/c/repo/p/Omniscye/) in the R.E.P.O. Modding Server for helping me get started with modding, and for guiding me through the making of this mod!
 
 Please report any issues on [GitHub](https://github.com/BLOKBUSTR/EnemyValuableTweaks) or the [Discord Thread](https://discord.com/channels/1344557689979670578/1421636750174060635).
