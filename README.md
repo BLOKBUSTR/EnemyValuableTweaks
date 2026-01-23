@@ -20,7 +20,7 @@ Want to know what my first motivation for this mod was? You know those moments w
 
 🔢 Configure the maximum amount of orbs that can spawn per enemy, per level. You can have as many or as few as you want, or even disable the limit entirely!
 
-💀 **[NEW]** Configure the probability of an orb being spawned when a monster is killed. This does not interfere with the maximum spawn amount.
+💀 **[NEW]** Configure the probability of an orb being spawned when a monster is killed, depending on its difficulty level. This does not interfere with the maximum spawn amount.
 
 🖥 **[NEW]** Host-Only Mode, which can be enabled in the config. It disables all parts of the mod that are required to be synced with clients, leaving only behaviors that are host-authoritative. *Note: currently, this disables everything except features under the "Spawning" category in the config.*
 
