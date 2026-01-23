@@ -5,7 +5,7 @@
         <LangVersion>9</LangVersion>
         <Nullable>enable</Nullable>
         <Authors>BLOKBUSTR</Authors>
-        <Version>1.1.0</Version>
+        <Version>1.2.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 

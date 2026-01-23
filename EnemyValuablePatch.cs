@@ -1,34 +1,60 @@
-﻿using HarmonyLib;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using HarmonyLib;
 using Photon.Pun;
-using Random = System.Random;
-using System.Collections.Generic;
-using UnityEngine;
 using Unity.VisualScripting;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
+#pragma warning disable CS8618
 namespace EnemyValuableTweaks
 {
     [HarmonyPatch(typeof(EnemyValuable))]
     internal static class EnemyValuablePatch
     {
         // Dictionaries used as timers across multiple orb instances
-        private static readonly Dictionary<object, float> OrbAdditionalCheckDelay = new();
-        private static readonly Dictionary<object, float> OrbGrabTimers = new();
-        private static readonly Dictionary<object, float> OrbSafeAreaTimers = new();
+        private static readonly Dictionary<EnemyValuable, float> OrbAdditionalCheckDelay = new();
+        private static readonly Dictionary<EnemyValuable, float> OrbGrabTimers = new();
+        private static readonly Dictionary<EnemyValuable, float> OrbSafeAreaTimers = new();
+        
+        private static readonly List<EnemyValuable> TrackedOrbs = new();
         
         [HarmonyPostfix, HarmonyPatch(nameof(EnemyValuable.Start))]
-        public static void StartPostfix(EnemyValuable __instance)
+        public static void StartPostfix([SuppressMessage("ReSharper", "InconsistentNaming")] EnemyValuable __instance)
         {
-            EnemyValuableTweaks.Logger.LogInfo($"New EnemyValuable has spawned (InstanceID {__instance.GetInstanceID()} | ViewID {__instance.impactDetector.photonView.ViewID})");
+            EnemyValuableTweaks.LogDebugGeneral("New EnemyValuable spawned)", __instance);
+            
+            if (SemiFunc.IsMasterClientOrSingleplayer())
+            {
+                if (EnemyValuableTweaks.configHostOnlyMode.Value)
+                {
+                    EnemyValuableTweaks.LogDebugGeneral("HostOnlyMode is enabled, skipping all setup and logic");
+                    return;
+                }
+                TrackedOrbs.Add(__instance);
+                EnemyValuableTweaks.LogDebugGeneral($"Tracked orbs: {TrackedOrbs.Count} (added one)");
+            }
+            
             __instance.indestructibleTimer = EnemyValuableTweaks.configTimerLength.Value;
             
-            var component = __instance.AddComponent<EnemyValuableSynchronizer>();
-            component.enemyValuable = __instance;
-            component.photonView = __instance.impactDetector.photonView;
+            if (SemiFunc.IsMultiplayer())
+            {
+                var component = __instance.AddComponent<EnemyValuableSynchronizer>();
+                component.enemyValuable = __instance;
+                component.photonView = __instance.impactDetector.photonView;
+                EnemyValuableTweaks.LogDebugGeneral("In Multiplayer, added EnemyValuableSynchronizer component", __instance);
+            }
+            else
+            {
+                EnemyValuableTweaks.LogDebugGeneral("In Singleplayer, didn't add EnemyValuableSynchronizer component", __instance);
+            }
         }
         
         [HarmonyPostfix, HarmonyPatch(nameof(EnemyValuable.Update))]
-        public static void UpdatePostfix(EnemyValuable __instance)
+        public static void UpdatePostfix([SuppressMessage("ReSharper", "InconsistentNaming")] EnemyValuable __instance)
         {
+            if (!TrackedOrbs.Contains(__instance) || EnemyValuableTweaks.configHostOnlyMode.Value) return;
+            
             // Skip all following logic if the orb is already supposed to be destructible
             if (__instance.indestructibleTimer < 0f)
                 MakeDestructible(__instance);
@@ -42,7 +68,7 @@ namespace EnemyValuableTweaks
             }
             else
             {
-                EnemyValuableTweaks.LogDebugTimers($"Time remaining: {__instance.indestructibleTimer}");
+                EnemyValuableTweaks.LogDebugTimers($"Time remaining: {__instance.indestructibleTimer}", __instance);
             }
             
             // Delay additional checks, if configured
@@ -55,7 +81,7 @@ namespace EnemyValuableTweaks
                 if (OrbAdditionalCheckDelay[__instance] > 0f)
                 {
                     OrbAdditionalCheckDelay[__instance] -= Time.deltaTime;
-                    EnemyValuableTweaks.LogDebugTimers($"Delaying additional checks for: {OrbAdditionalCheckDelay[__instance]} ({__instance.GetInstanceID()})");
+                    EnemyValuableTweaks.LogDebugTimers($"Delaying additional checks for: {OrbAdditionalCheckDelay[__instance]}", __instance);
                     return;
                 }
             }
@@ -64,8 +90,8 @@ namespace EnemyValuableTweaks
             if (EnemyValuableTweaks.configEnableVelocityCheck.Value)
             {
                 // Find the max of current AND previous velocity
-                var curVel = __instance.impactDetector.rb.velocity;
-                var prevVel = __instance.impactDetector.previousVelocity;
+                Vector3 curVel = __instance.impactDetector.rb.velocity;
+                Vector3 prevVel = __instance.impactDetector.previousVelocity;
                 var vel = Mathf.Max(
                     Mathf.Abs(curVel.x),
                     Mathf.Abs(curVel.y),
@@ -73,7 +99,7 @@ namespace EnemyValuableTweaks
                     Mathf.Abs(prevVel.x),
                     Mathf.Abs(prevVel.y),
                     Mathf.Abs(prevVel.z));
-                EnemyValuableTweaks.LogDebugTimers($"curVel: {curVel} | prevVel: {prevVel} | combined: {vel}");
+                EnemyValuableTweaks.LogDebugTimers($"curVel: {curVel} | prevVel: {prevVel} | combined: {vel}", __instance);
                 if (vel < EnemyValuableTweaks.configVelocityThreshold.Value)
                 {
                     MakeDestructible(__instance);
@@ -94,18 +120,19 @@ namespace EnemyValuableTweaks
                     if (!OrbGrabTimers.ContainsKey(__instance))
                     {
                         OrbGrabTimers[__instance] = EnemyValuableTweaks.configPlayerHoldTime.Value;
-                        EnemyValuableTweaks.LogDebugTimers($"Player grabbed ({__instance.GetInstanceID()})");
+                        EnemyValuableTweaks.LogDebugTimers("Player grabbed", __instance);
                     }
                     
-                    HandleTimerDictionaries(OrbGrabTimers, __instance);
+                    TimerDictionaryLogic(OrbGrabTimers, __instance);
                 }
                 else if (OrbGrabTimers.Remove(__instance))
                 {
-                    EnemyValuableTweaks.LogDebugTimers($"Player let go ({__instance.GetInstanceID()})");
+                    EnemyValuableTweaks.LogDebugTimers("Player released", __instance);
                 }
             }
             
             // Safe area check (C.A.R.T. and extraction point); functionally identical to player hold check.
+            // ReSharper disable once InvertIf
             if (EnemyValuableTweaks.configEnableSafeAreaCheck.Value)
             {
                 if (__instance.impactDetector.inCart)
@@ -118,21 +145,23 @@ namespace EnemyValuableTweaks
                     if (!(OrbSafeAreaTimers.ContainsKey(__instance)))
                     {
                         OrbSafeAreaTimers[__instance] = EnemyValuableTweaks.configSafeAreaTime.Value;
-                        EnemyValuableTweaks.LogDebugTimers($"Placed in safe area ({__instance.GetInstanceID()})");
+                        EnemyValuableTweaks.LogDebugTimers("Placed in safe area", __instance);
                     }
                     
-                    HandleTimerDictionaries(OrbSafeAreaTimers, __instance);
+                    TimerDictionaryLogic(OrbSafeAreaTimers, __instance);
                 }
                 else if (OrbSafeAreaTimers.Remove(__instance))
                 {
-                    EnemyValuableTweaks.LogDebugTimers($"Removed from safe area ({__instance.GetInstanceID()})");
+                    EnemyValuableTweaks.LogDebugTimers("Removed from safe area", __instance);
                 }
             }
         }
         
-        private static void HandleTimerDictionaries(Dictionary<object, float> d, EnemyValuable i)
+        private static void TimerDictionaryLogic(Dictionary<EnemyValuable, float> d, EnemyValuable i)
         {
-            EnemyValuableTweaks.LogDebugTimers($"Dictionary time remaining: {d[i]} {i.GetInstanceID()}");
+            if (!TrackedOrbs.Contains(i)) return;
+            
+            EnemyValuableTweaks.LogDebugTimers($"Dictionary time remaining: {d[i]}", i);
             d[i] -= Time.deltaTime;
             
             if (!(d[i] <= 0f)) return;
@@ -143,22 +172,26 @@ namespace EnemyValuableTweaks
         
         private static void MakeDestructible(EnemyValuable i)
         {
+            if (!TrackedOrbs.Contains(i)) return;
+            
             i.indestructibleTimer = 0f;
             i.impactDetector.destroyDisable = false;
+            TrackedOrbs.Remove(i);
             OrbAdditionalCheckDelay.Remove(i);
-            EnemyValuableTweaks.Logger.LogInfo($"Made EnemyValuable destructible (InstanceID {i.GetInstanceID()} | ViewID {i.impactDetector.photonView.ViewID})");
+            EnemyValuableTweaks.LogDebugGeneral("Made EnemyValuable destructible", i);
+            EnemyValuableTweaks.LogDebugGeneral($"Tracked orbs: {TrackedOrbs.Count} (removed one)");
             
-            if (SemiFunc.IsNotMasterClient())
+            if (!SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.IsMultiplayer())
             {
-                EnemyValuableTweaks.LogDebugGeneral("Is client, skipping probability calculations");
+                EnemyValuableTweaks.LogDebugGeneral("Is client or singleplayer, skipping explosion probability calculations", i);
                 return;
             }
-            EnemyValuableTweaks.LogDebugGeneral("Is host or singleplayer, calculating probability and sending to clients if multiplayer");
+            EnemyValuableTweaks.LogDebugGeneral("Is host, calculating explosion probability and sending to clients", i);
             
             var component = i.GetComponent<EnemyValuableSynchronizer>();
             if (component == null)
             {
-                EnemyValuableTweaks.Logger.LogError("EnemyValuableSynchronizer component not found!");
+                EnemyValuableTweaks.Logger.LogError($"{i}: EnemyValuableSynchronizer component not found!");
                 return;
             }
             
@@ -188,47 +221,54 @@ namespace EnemyValuableTweaks
             {
                 case <= 0f:
                     component.SetExplosion(false);
-                    EnemyValuableTweaks.LogDebugGeneral("Probability is 0, EnemyValuable will never explode");
+                    EnemyValuableTweaks.LogDebugGeneral("Probability is 0, EnemyValuable will never explode", i);
                     return;
                 case >= 1f:
                     component.SetExplosion(true);
-                    EnemyValuableTweaks.LogDebugGeneral("Probability is 1, EnemyValuable will always explode");
+                    EnemyValuableTweaks.LogDebugGeneral("Probability is 1, EnemyValuable will always explode", i);
                     return;
             }
             
-            var rng = new Random().NextDouble();
+            var rng = Random.value;
             component.SetExplosion(rng < probability);
-            EnemyValuableTweaks.LogDebugGeneral($"MoonLevel: {SemiFunc.MoonLevel()} | rng: {rng} | probability: {probability} | hasExplosion: {i.hasExplosion}");
+            EnemyValuableTweaks.LogDebugGeneral($"MoonLevel: {SemiFunc.MoonLevel()} | rng: {rng} | probability: {probability} | hasExplosion: {i.hasExplosion}", i);
         }
-    }
-}
-
-public class EnemyValuableSynchronizer : MonoBehaviourPun
-{
-    #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-    public EnemyValuable enemyValuable;
-    public new PhotonView photonView;
-    #pragma warning restore CS8618
-    
-    public void SetExplosion(bool state)
-    {
-        if (SemiFunc.IsNotMasterClient()) return;
-        if (SemiFunc.IsMultiplayer())
+        
+        internal static void ClearTrackedOrbs()
         {
-            photonView.RPC(nameof(SetExplosionRPC), RpcTarget.All, state);
-            EnemyValuableTweaks.EnemyValuableTweaks.LogDebugGeneral($"Called SetExplosionRPC on clients (hasExplosion = {state})");
-        }
-        else
-        {
-            SetExplosionRPC(state);
-            EnemyValuableTweaks.EnemyValuableTweaks.LogDebugGeneral($"Set hasExplosion = {state}");
+            if (TrackedOrbs.Count <= 0) return;
+            TrackedOrbs.Clear();
+            EnemyValuableTweaks.Logger.LogInfo("Changed level, cleared tracked orbs");
         }
     }
     
-    [PunRPC]
-    public void SetExplosionRPC(bool state, PhotonMessageInfo info = default)
+    public class EnemyValuableSynchronizer : MonoBehaviourPun
     {
-        enemyValuable.hasExplosion = state;
-        EnemyValuableTweaks.EnemyValuableTweaks.LogDebugGeneral($"Received SetExplosionRPC from host (hasExplosion = {state})");
+        public EnemyValuable enemyValuable;
+        public new PhotonView photonView;
+        
+        public void SetExplosion(bool state)
+        {
+            if (SemiFunc.IsNotMasterClient()) return;
+            
+            
+            if (SemiFunc.IsMultiplayer())
+            {
+                photonView.RPC(nameof(SetExplosionRPC), RpcTarget.All, state);
+                EnemyValuableTweaks.LogDebugGeneral($"Called SetExplosionRPC on clients (hasExplosion = {state})", enemyValuable);
+            }
+            else
+            {
+                SetExplosionRPC(state);
+                EnemyValuableTweaks.LogDebugGeneral($"Set hasExplosion = {state}", enemyValuable);
+            }
+        }
+        
+        [PunRPC]
+        public void SetExplosionRPC(bool state, PhotonMessageInfo info = default)
+        {
+            enemyValuable.hasExplosion = state;
+            EnemyValuableTweaks.LogDebugGeneral($"Received SetExplosionRPC from host (hasExplosion = {state})", enemyValuable);
+        }
     }
 }

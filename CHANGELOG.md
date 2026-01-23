@@ -1,7 +1,13 @@
 # Changelog
 
-### 1.x.x
-- Other minor code and README tweaks
+### 1.2.0
+- Added configurable probabilities for specific valuable sizes to drop when a monster is killed. This does not interfere with the maximum spawn amount.
+- Added a "Host-Only Mode" option to the config, which disables all features that require the mod to also be installed on clients and/or have the same configs as the host. Currently, this disables everything except the "Spawning" options.
+- General code and README tweaks
+
+**Note**: The "7 - Max Spawn Amount" config category has been renamed to "7 - Spawning". This will not break the mod, but the "Max Spawn Amount" option may end up being duplicated if you've played with a previous version of this mod.
+
+---
 
 ### 1.1.0
 - Added configurable max spawn amount.

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using HarmonyLib;
 
 namespace EnemyValuableTweaks
@@ -6,17 +7,19 @@ namespace EnemyValuableTweaks
     internal static class EnemyHealthPatch
     {
         [HarmonyPostfix, HarmonyPatch(nameof(EnemyHealth.Awake))]
-        public static void AwakePostFix(EnemyHealth __instance)
+        public static void AwakePostFix([SuppressMessage("ReSharper", "InconsistentNaming")] EnemyHealth __instance)
         {
+            
+            
             if (EnemyValuableTweaks.configMaxSpawnAmount.Value == 0)
             {
                 __instance.spawnValuableMax = int.MaxValue;
-                EnemyValuableTweaks.LogDebugGeneral("spawnValuableMax is infinite");
+                EnemyValuableTweaks.LogDebugGeneral("spawnValuableMax is infinite", __instance);
             }
             else
             {
                 __instance.spawnValuableMax = EnemyValuableTweaks.configMaxSpawnAmount.Value;
-                EnemyValuableTweaks.LogDebugGeneral($"Set spawnValuableMax: {__instance.spawnValuableMax}");
+                EnemyValuableTweaks.LogDebugGeneral($"Set spawnValuableMax: {__instance.spawnValuableMax}", __instance);
             }
         }
     }

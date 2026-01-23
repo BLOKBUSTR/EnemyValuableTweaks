@@ -1,20 +1,21 @@
-﻿using BepInEx;
+﻿using System.Diagnostics.CodeAnalysis;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
 
+#pragma warning disable CS8618
 namespace EnemyValuableTweaks
 {
-    [BepInPlugin("BLOKBUSTR.EnemyValuableTweaks", "EnemyValuableTweaks", "1.1.0")]
+    [BepInPlugin("BLOKBUSTR.EnemyValuableTweaks", "EnemyValuableTweaks", "1.2.0")]
     public class EnemyValuableTweaks : BaseUnityPlugin
     {
         internal static EnemyValuableTweaks Instance { get; private set; } = null!;
         internal new static ManualLogSource Logger => Instance._logger;
-        private ManualLogSource _logger => base.Logger;
+        [SuppressMessage("ReSharper", "InconsistentNaming")] private ManualLogSource _logger => base.Logger;
         internal Harmony? Harmony { get; set; }
         
-        #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
         public static ConfigEntry<bool> configEnableTimer;
         public static ConfigEntry<float> configTimerLength;
         
@@ -36,13 +37,21 @@ namespace EnemyValuableTweaks
         public static ConfigEntry<float> configSuperMoonExplosionProbability; // Level 20
 
         public static ConfigEntry<int> configMaxSpawnAmount;
+        public static ConfigEntry<float> configSmallSpawnProbability;
+        public static ConfigEntry<float> configMediumSpawnProbability;
+        public static ConfigEntry<float> configLargeSpawnProbability;
         
-        private static ConfigEntry<bool> _configEnableDebugTimerLogs;
-        private static ConfigEntry<bool> _configEnableDebugGeneralLogs;
-        #pragma warning restore CS8618
+        public static ConfigEntry<bool> configHostOnlyMode;
+        
+        private static ConfigEntry<bool> configEnableDebugTimerLogs;
+        private static ConfigEntry<bool> configEnableDebugGeneralLogs;
         
         private void Awake()
         {
+            // Host-only mode
+            configHostOnlyMode = Config.Bind("Hosting", "HostOnlyMode", false,
+                new ConfigDescription("Disables all features that require clients to also have the mod installed and/or have the same configs. Currently, this disables everything except the \"Spawning\" options."));
+            
             // Config setup
             configEnableTimer = Config.Bind("1 - Timer", "EnableTimer", true,
                 new ConfigDescription("Whether to enable the main timer that automatically disables indestructibility once expired."));
@@ -88,25 +97,35 @@ namespace EnemyValuableTweaks
                 new ConfigDescription("The probability of orbs exploding during the Super Moon phase, beginning on Level 20.",
                 new AcceptableValueRange<float>(0f, 1f)));
             
-            configMaxSpawnAmount = Config.Bind("7 - Max Spawn Amount", "MaxSpawnAmount", 3,
-                new ConfigDescription("The maximum amount of orbs that can spawn per enemy, per level. Vanilla default is 3; set to 0 for no limit. This option only applies on level reload.",
+            configMaxSpawnAmount = Config.Bind("7 - Spawning", "MaxSpawnAmount", 3,
+                new ConfigDescription("The maximum amount of orbs that can spawn per enemy. Vanilla default is 3; set to 0 for no limit. This option only applies on level reload.",
                 new AcceptableValueRange<int>(0, 100)));
+            configSmallSpawnProbability = Config.Bind("7 - Spawning", "SmallSpawnProbability", .9f,
+                new ConfigDescription("The probability for small orbs to drop from Difficulty 1 monsters on death.", 
+                new AcceptableValueRange<float>(0f, 1f)));
+            configMediumSpawnProbability = Config.Bind("7 - Spawning", "MediumSpawnProbability", .7f,
+                new ConfigDescription("The probability for medium orbs to drop from Difficulty 2 monsters on death.",
+                new AcceptableValueRange<float>(0f, 1f)));
+            configLargeSpawnProbability = Config.Bind("7 - Spawning", "LargeSpawnProbability", .5f,
+                new ConfigDescription("The probability for large orbs to drop from Difficulty 3 monsters on death.",
+                new AcceptableValueRange<float>(0f, 1f)));
             
             // Debug
-            _configEnableDebugTimerLogs = Config.Bind("Debug", "EnableDebugTimerLogs", false,
-                new ConfigDescription("Enable debug logs for this mod's timers. \"Debug\" or \"All\" must be included in Logging.Console.LogLevels in the BepInEx config to be able to see these logs. Note that this will create a lot of spam in the console, so please keep this disabled for normal gameplay!"));
-            _configEnableDebugGeneralLogs = Config.Bind("Debug", "EnableDebugGeneralLogs", false,
+            configEnableDebugTimerLogs = Config.Bind("Debug", "EnableDebugTimerLogs", false,
+                new ConfigDescription("Enable debug logs for this mod's timers. \"Debug\" or \"All\" must be included in Logging.Console.LogLevels in the BepInEx config to be able to see these logs. Note that this will create a lot of spam in the console whenever orbs are active, so please keep this disabled for normal gameplay!"));
+            configEnableDebugGeneralLogs = Config.Bind("Debug", "EnableDebugGeneralLogs", false,
                 new ConfigDescription("Enable debug logs for other calculations and logic performed by this mod."));
             
             Instance = this;
             
-            this.gameObject.transform.parent = null;
-            this.gameObject.hideFlags = HideFlags.HideAndDontSave;
+            gameObject.transform.parent = null;
+            gameObject.hideFlags = HideFlags.HideAndDontSave;
             
             Patch();
             
             Logger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version}: it's tweakin' time!");
-            
+            LogDebugTimers("Timer debug logs are enabled.");
+            LogDebugGeneral("General debug logs are enabled.");
             if (configEnableTimer.Value && configAdditionalChecksDelay.Value > configTimerLength.Value)
                 Logger.LogWarning($"AdditionalChecksDelay ({configAdditionalChecksDelay.Value}) is greater than TimerLength ({configTimerLength.Value})! Please adjust your config.");
         }
@@ -122,15 +141,18 @@ namespace EnemyValuableTweaks
             Harmony?.UnpatchSelf();
         }
         
-        internal static void LogDebugTimers(string message)
+        internal static void LogDebugTimers(string message, MonoBehaviour? instance = null)
         {
-            if (!_configEnableDebugTimerLogs.Value) return;
-            Logger.LogDebug(message);
+            if (!configEnableDebugTimerLogs.Value) return;
+            var prefix = instance != null ? $"{instance.GetInstanceID()}: " : "";
+            Logger.LogDebug(prefix + message);
         }
-        internal static void LogDebugGeneral(string message)
+        
+        internal static void LogDebugGeneral(string message, MonoBehaviour? instance = null)
         {
-            if (!_configEnableDebugGeneralLogs.Value) return;
-            Logger.LogDebug(message);
+            if (!configEnableDebugGeneralLogs.Value) return;
+            var prefix = instance != null ? $"{instance.GetInstanceID()}: " : "";
+            Logger.LogDebug(prefix + message);
         }
     }
 }
