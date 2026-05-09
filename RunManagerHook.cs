@@ -4,11 +4,15 @@ using HarmonyLib;
 namespace EnemyValuableTweaks
 {
     [HarmonyPatch(typeof(RunManager))]
-    public class RunManagerHook
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    internal class RunManagerHook
     {
         [HarmonyPostfix, HarmonyPatch(nameof(RunManager.ChangeLevel))]
-        public static void ChangeLevelPostfix([SuppressMessage("ReSharper", "InconsistentNaming")] RunManager __instance)
+        internal static void ChangeLevelPostfix(bool _levelFailed)
         {
+            // To avoid getting spammed by the Arena, or by Imperium if "Disable Game Over" is enabled
+            if (_levelFailed) return;
+            
             EnemyValuablePatch.ClearTrackedOrbs();
         }
     }

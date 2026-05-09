@@ -8,13 +8,15 @@ using UnityEngine;
 #pragma warning disable CS8618
 namespace EnemyValuableTweaks
 {
-    [BepInPlugin("BLOKBUSTR.EnemyValuableTweaks", "EnemyValuableTweaks", "1.2.0")]
+    [BepInPlugin("BLOKBUSTR.EnemyValuableTweaks", "EnemyValuableTweaks", "1.3.0")]
     public class EnemyValuableTweaks : BaseUnityPlugin
     {
         internal static EnemyValuableTweaks Instance { get; private set; } = null!;
         internal new static ManualLogSource Logger => Instance._logger;
         [SuppressMessage("ReSharper", "InconsistentNaming")] private ManualLogSource _logger => base.Logger;
         internal Harmony? Harmony { get; set; }
+        
+        #region ConfigEntries
         
         public static ConfigEntry<bool> configEnableTimer;
         public static ConfigEntry<float> configTimerLength;
@@ -35,7 +37,7 @@ namespace EnemyValuableTweaks
         public static ConfigEntry<float> configHalfMoonExplosionProbability; // Level 10
         public static ConfigEntry<float> configFullMoonExplosionProbability; // Level 15
         public static ConfigEntry<float> configSuperMoonExplosionProbability; // Level 20
-
+        
         public static ConfigEntry<int> configMaxSpawnAmount;
         public static ConfigEntry<float> configSmallSpawnProbability;
         public static ConfigEntry<float> configMediumSpawnProbability;
@@ -43,18 +45,32 @@ namespace EnemyValuableTweaks
         
         public static ConfigEntry<bool> configHostOnlyMode;
         
-        private static ConfigEntry<bool> configEnableDebugTimerLogs;
-        private static ConfigEntry<bool> configEnableDebugGeneralLogs;
+        private static ConfigEntry<bool> configEnableDebug;
+        private static ConfigEntry<bool> configEnableTimerDebug;
+        
+        #endregion
         
         private void Awake()
         {
-            // Host-only mode
-            configHostOnlyMode = Config.Bind("Hosting", "HostOnlyMode", false,
-                new ConfigDescription("Disables all features that require clients to also have the mod installed and/or have the same configs. Currently, this disables everything except the \"Spawning\" options."));
+            Instance = this;
             
-            // Config setup
+            gameObject.transform.parent = null;
+            gameObject.hideFlags = HideFlags.HideAndDontSave;
+            
+            RegisterConfig();
+            Patch();
+            
+            Logger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version}: it's tweakin' time!");
+            Debug("Debug logging is enabled.");
+            DebugTimer("Timer logging is enabled.");
+            if (configEnableTimer.Value && configAdditionalChecksDelay.Value > configTimerLength.Value)
+                Logger.LogWarning($"AdditionalChecksDelay ({configAdditionalChecksDelay.Value}) is greater than TimerLength ({configTimerLength.Value})! Please adjust your config.");
+        }
+        
+        private void RegisterConfig()
+        {
             configEnableTimer = Config.Bind("1 - Timer", "EnableTimer", true,
-                new ConfigDescription("Whether to enable the main timer that automatically disables indestructibility once expired."));
+                new ConfigDescription("Whether to enable the main timer that automatically disables indestructibility once expired. If disabled, the orb will never become destructible unless any of the following conditions are enabled."));
             configTimerLength = Config.Bind("1 - Timer", "TimerLength", 10f,
                 new ConfigDescription("Time in seconds until the orb loses indestructibility. Vanilla default is 5 seconds.",
                 new AcceptableValueRange<float>(1f, 60f)));
@@ -65,9 +81,9 @@ namespace EnemyValuableTweaks
             
             configEnableVelocityCheck = Config.Bind("3 - Velocity", "EnableVelocityCheck", true,
                 new ConfigDescription("Automatically disables indestructibility when the orb slows down to the specified velocity threshold."));
-            configVelocityThreshold = Config.Bind("3 - Velocity", "VelocityThreshold", .01f,
+            configVelocityThreshold = Config.Bind("3 - Velocity", "VelocityThreshold", .5f,
                 new ConfigDescription("The minimum threshold for the velocity check.",
-                new AcceptableValueRange<float>(0f, 1f)));
+                new AcceptableValueRange<float>(0f, 2f)));
             
             configEnablePlayerHold = Config.Bind("4 - Player Hold", "EnablePlayerHold", true,
                 new ConfigDescription("Automatically disables indestructibility when the orb is grabbed by a player."));
@@ -100,34 +116,25 @@ namespace EnemyValuableTweaks
             configMaxSpawnAmount = Config.Bind("7 - Spawning", "MaxSpawnAmount", 3,
                 new ConfigDescription("The maximum amount of orbs that can spawn per enemy. Vanilla default is 3; set to 0 for no limit. This option only applies on level reload.",
                 new AcceptableValueRange<int>(0, 100)));
-            configSmallSpawnProbability = Config.Bind("7 - Spawning", "SmallSpawnProbability", .9f,
+            configSmallSpawnProbability = Config.Bind("7 - Spawning", "SmallSpawnProbability", 1f,
                 new ConfigDescription("The probability for small orbs to drop from Difficulty 1 monsters on death.", 
                 new AcceptableValueRange<float>(0f, 1f)));
-            configMediumSpawnProbability = Config.Bind("7 - Spawning", "MediumSpawnProbability", .7f,
+            configMediumSpawnProbability = Config.Bind("7 - Spawning", "MediumSpawnProbability", 1f,
                 new ConfigDescription("The probability for medium orbs to drop from Difficulty 2 monsters on death.",
                 new AcceptableValueRange<float>(0f, 1f)));
-            configLargeSpawnProbability = Config.Bind("7 - Spawning", "LargeSpawnProbability", .5f,
+            configLargeSpawnProbability = Config.Bind("7 - Spawning", "LargeSpawnProbability", 1f,
                 new ConfigDescription("The probability for large orbs to drop from Difficulty 3 monsters on death.",
                 new AcceptableValueRange<float>(0f, 1f)));
             
+            // Host-only mode
+            configHostOnlyMode = Config.Bind("Hosting", "HostOnlyMode", false,
+                new ConfigDescription("Disables all features that require clients to also have the mod installed. Currently, this disables everything except the \"Spawning\" options."));
+            
             // Debug
-            configEnableDebugTimerLogs = Config.Bind("Debug", "EnableDebugTimerLogs", false,
-                new ConfigDescription("Enable debug logs for this mod's timers. \"Debug\" or \"All\" must be included in Logging.Console.LogLevels in the BepInEx config to be able to see these logs. Note that this will create a lot of spam in the console whenever orbs are active, so please keep this disabled for normal gameplay!"));
-            configEnableDebugGeneralLogs = Config.Bind("Debug", "EnableDebugGeneralLogs", false,
-                new ConfigDescription("Enable debug logs for other calculations and logic performed by this mod."));
-            
-            Instance = this;
-            
-            gameObject.transform.parent = null;
-            gameObject.hideFlags = HideFlags.HideAndDontSave;
-            
-            Patch();
-            
-            Logger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version}: it's tweakin' time!");
-            LogDebugTimers("Timer debug logs are enabled.");
-            LogDebugGeneral("General debug logs are enabled.");
-            if (configEnableTimer.Value && configAdditionalChecksDelay.Value > configTimerLength.Value)
-                Logger.LogWarning($"AdditionalChecksDelay ({configAdditionalChecksDelay.Value}) is greater than TimerLength ({configTimerLength.Value})! Please adjust your config.");
+            configEnableDebug = Config.Bind("Debug", "EnableDebug", false,
+                new ConfigDescription("Whether to enable debug logging. Keep this disabled for normal gameplay."));
+            configEnableTimerDebug = Config.Bind("Debug", "EnableTimerDebug", false,
+                new ConfigDescription("Whether to enable debug logging for this mod's timers. Note that this can create a lot of spam in the log. Keep this disabled for normal gameplay."));
         }
         
         internal void Patch()
@@ -136,23 +143,14 @@ namespace EnemyValuableTweaks
             Harmony.PatchAll();
         }
         
-        internal void Unpatch()
+        internal static void Debug(string message, MonoBehaviour? instance = null)
         {
-            Harmony?.UnpatchSelf();
+            if (configEnableDebug.Value) Logger.LogDebug((bool)instance ? instance + ": " + message : message);
         }
         
-        internal static void LogDebugTimers(string message, MonoBehaviour? instance = null)
+        internal static void DebugTimer(string message, MonoBehaviour? instance = null)
         {
-            if (!configEnableDebugTimerLogs.Value) return;
-            var prefix = instance != null ? $"{instance.GetInstanceID()}: " : "";
-            Logger.LogDebug(prefix + message);
-        }
-        
-        internal static void LogDebugGeneral(string message, MonoBehaviour? instance = null)
-        {
-            if (!configEnableDebugGeneralLogs.Value) return;
-            var prefix = instance != null ? $"{instance.GetInstanceID()}: " : "";
-            Logger.LogDebug(prefix + message);
+            if (configEnableTimerDebug.Value) Logger.LogDebug((bool)instance ? instance + ": " + message : message);
         }
     }
 }

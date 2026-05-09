@@ -1,5 +1,18 @@
 # Changelog
 
+### 1.3.0
+
+- Updated to R.E.P.O. 0.4.0.
+- Upgraded BepInEx dependency.
+- Various code optimizations, tweaks and cleanup.
+- Fixed an oversight where the explosion probability logic was being skipped in Singleplayer.
+- Altered the default config values for random spawn chance to 100% for all difficulties, making this feature completely opt-in.
+- README tweaks.
+
+The config has slightly changed again, so I suggest deleting/resetting it.
+
+---
+
 ### 1.2.0
 - Added configurable probabilities for the orb to drop when a monster is killed, depending on its difficulty level. This does not interfere with the maximum spawn amount.
 - Added a "Host-Only Mode" option to the config, which disables all features that require multiplayer synchronization, leaving only behaviors that are host-authoritative. Currently, this disables everything except the "Spawning" options.
