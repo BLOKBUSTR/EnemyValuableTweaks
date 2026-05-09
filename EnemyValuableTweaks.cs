@@ -70,7 +70,7 @@ namespace EnemyValuableTweaks
         private void RegisterConfig()
         {
             configEnableTimer = Config.Bind("1 - Timer", "EnableTimer", true,
-                new ConfigDescription("Whether to enable the main timer that automatically disables indestructibility once expired. If disabled, the orb will never become destructible unless any of the following conditions are enabled."));
+                "Whether to enable the main timer that automatically disables indestructibility once expired. If disabled, the orb will never become destructible unless any of the following conditions are enabled.");
             configTimerLength = Config.Bind("1 - Timer", "TimerLength", 10f,
                 new ConfigDescription("Time in seconds until the orb loses indestructibility. Vanilla default is 5 seconds.",
                 new AcceptableValueRange<float>(1f, 60f)));
@@ -80,19 +80,19 @@ namespace EnemyValuableTweaks
                 new AcceptableValueRange<float>(1f, 60f)));
             
             configEnableVelocityCheck = Config.Bind("3 - Velocity", "EnableVelocityCheck", true,
-                new ConfigDescription("Automatically disables indestructibility when the orb slows down to the specified velocity threshold."));
+                "Automatically disables indestructibility when the orb slows down to the specified velocity threshold.");
             configVelocityThreshold = Config.Bind("3 - Velocity", "VelocityThreshold", .5f,
                 new ConfigDescription("The minimum threshold for the velocity check.",
                 new AcceptableValueRange<float>(0f, 2f)));
             
             configEnablePlayerHold = Config.Bind("4 - Player Hold", "EnablePlayerHold", true,
-                new ConfigDescription("Automatically disables indestructibility when the orb is grabbed by a player."));
+                "Automatically disables indestructibility when the orb is grabbed by a player.");
             configPlayerHoldTime = Config.Bind("4 - Player Hold", "PlayerHoldTime", 1f,
                 new ConfigDescription("Time in seconds that a player must continue holding onto the orb before indestructibility is disabled. Resets when the player lets go, so that it will not prematurely become destructible if the player gets distracted by something else. Can be set to 0 to immediately disable indestructibility.",
                 new AcceptableValueRange<float>(0f, 3f)));
             
             configEnableSafeAreaCheck = Config.Bind("5 - Safe Areas", "EnableSafeAreaCheck", true,
-                new ConfigDescription("Disables indestructibility if the orb has been placed inside a safe area, such as the C.A.R.T. or an extraction point."));
+                "Disables indestructibility if the orb has been placed inside a safe area, such as the C.A.R.T. or an extraction point.");
             configSafeAreaTime = Config.Bind("5 - Safe Areas", "SafeAreaTime", 1f,
                 new ConfigDescription("Time in seconds that the orb must remain in a safe area to disable indestructibility. Works very much like PlayerHoldTime.",
                 new AcceptableValueRange<float>(0f, 3f)));
@@ -128,13 +128,13 @@ namespace EnemyValuableTweaks
             
             // Host-only mode
             configHostOnlyMode = Config.Bind("Hosting", "HostOnlyMode", false,
-                new ConfigDescription("Disables all features that require clients to also have the mod installed. Currently, this disables everything except the \"Spawning\" options."));
+                "Disables all features that require clients to also have the mod installed. Currently, this disables everything except the \"Spawning\" options.");
             
             // Debug
             configEnableDebug = Config.Bind("Debug", "EnableDebug", false,
-                new ConfigDescription("Whether to enable debug logging. Keep this disabled for normal gameplay."));
+                "Whether to enable debug logging. Keep this disabled for normal gameplay.");
             configEnableTimerDebug = Config.Bind("Debug", "EnableTimerDebug", false,
-                new ConfigDescription("Whether to enable debug logging for this mod's timers. Note that this can create a lot of spam in the log. Keep this disabled for normal gameplay."));
+                "Whether to enable debug logging for this mod's timers. Note that this can create a lot of spam in the log. Keep this disabled for normal gameplay.");
         }
         
         internal void Patch()
